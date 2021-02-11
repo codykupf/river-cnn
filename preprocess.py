@@ -10,24 +10,22 @@ from shapely.geometry import Point,LineString, MultiPoint
 from shapely.ops import split
 
 #Cut out lakes from stream shapefile
-def clip_lakes(site):
+def clip_lakes(s_file,wb_file,outfile):
 
     # Initialize whitebox tools
     wbt = WhiteboxTools()
 
     # Sets the Whitebox working directory
-    wbt.work_dir = "{}{}".format(folder, site)
-
-    # Import the stream and watershed files
-    s_file = "{}{}NHN_04HA000_2_0_HN_NLFLOW_1.shp".format(folder, site)
-    wb_file = "{}{}NHN_04HA000_2_0_HD_WATERBODY_2.shp".format(folder, site)
-    outfile = "{}{}s_erased.shp".format(folder, site)
+    #wbt.work_dir = ""
 
     # Clip the streams to exclude lakes
     wbt.erase(s_file, wb_file, outfile)
 
 #Filter shapefile segments
-def filter_segments(site,s_clipped,epsg,min_length=500,min_vertices=100, max_vertices=224):
+def filter_segments(clip_file,filter_file,epsg,min_length=500,min_vertices=100, max_vertices=224):
+
+    #Load clipped file to perform filtering
+    s_clipped = gpd.read_file(clip_file)
 
     print("Filtering from {} segments".format(s_clipped.shape[0]))
 
@@ -98,11 +96,11 @@ def filter_segments(site,s_clipped,epsg,min_length=500,min_vertices=100, max_ver
     #plt.show()
 
     #Save clipped files
-    s_clipped.to_file("{}s_filtered.shp".format(site))
+    s_clipped.to_file(filter_file)
     return(s_clipped)
 
 #Function to convert polylines to images
-def get_images(site,s_filtered):
+def create_images(filter_file,images):
 
     # Function to rotate points about the origin
     def rotate(x, y, theta):
@@ -159,9 +157,11 @@ def get_images(site,s_filtered):
             # Return the image
             return img
 
+    #Load filtered file
+    s_filtered = gpd.read_file(filter_file)
     # Convert all lines to images
     count = 0
-    saveto = "{}Images/".format(site)
+    saveto = images
     used = []
 
     print("Saving images to {}".format(saveto))
@@ -186,28 +186,46 @@ def get_images(site,s_filtered):
 if __name__ == '__main__':
 
     #Set folder and site
-    folder = "/Users/codykupf/Documents/Projects/river-cnn-data/"
-    site = "{}nhn_rhn_04ha000_shp_en/".format(folder)
+    folder = "/Users/codykupf/Documents/Projects/river-cnn/"
+    inputs = "{}Inputs/".format(folder)
+    results = "{}Results/".format(folder)
+    images = "{}Images/".format(folder)
 
-    #clip surface waterbodies from the streams
+    # List of input stream and watershed files
+    s_file = "{}NHN_04HA000_2_0_HN_NLFLOW_1.shp".format(inputs)
+    wb_file = "{}NHN_04HA000_2_0_HD_WATERBODY_2.shp".format(inputs)
+
+    #Output files
+    clip_file = "{}s_clipped.shp".format(results)
+    filter_file = "{}s_filtered.shp".format(results)
+
+    #clip surface waterbodies from the streams if the clipped file doesn't already exist
     try:
-        clipped = gpd.read_file("{}s_erased.shp".format(site))
+        clipped = gpd.read_file(clip_file)
+        print("Clipped streams loaded from {}".format(clip_file))
     except:
-        clipped = clip_lakes(site)
+        print("Clipping streams for {}".format(s_file))
+        clip_lakes(s_file,wb_file,clip_file)
+        clipped = gpd.read_file(clip_file)
 
-    #clipped.plot()
-    #plt.show()
+    clipped.plot()
+    plt.title("Clipped stream segments")
+    plt.show()
 
     #Reproject to UTM and filter
     #UTM 17N is EPSG:2958
-    filtered = filter_segments(site,clipped,"EPSG:2958")
+    try:
+        filtered = gpd.read_file(filter_file)
+        print("Filtered streams loaded from {}".format(filter_file))
+    except:
+        print("Filtering streams for {}".format(s_file))
+        filtered = filter_segments(clip_file,filter_file,"EPSG:2958")
 
     filtered.plot()
+    plt.title("Filtered stream segments")
     plt.show()
 
     #Normalize lines and convert to images
-    get_images(site,filtered)
-
-
+    create_images(filter_file,images)
 
 
