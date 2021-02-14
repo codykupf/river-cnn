@@ -6,6 +6,8 @@ from matplotlib import pyplot as plt
 import matplotlib.image as mpimg
 import cv2
 from scipy.spatial import distance_matrix
+from sklearn.decomposition import PCA
+
 
 
 def flatten(model_file,model):
@@ -45,7 +47,7 @@ def get_clusters(model,K):
     df = df.sort_values(['label', 'sq-dist'])
     plot_closest(df, k, images)
 
-def plot_closest(df,K,images,n_figs=5,model="kmeans"):
+def plot_closest(df,K,images,n_figs=8,model="kmeans"):
 
     fig = plt.figure()
     # fig.suptitle('{}'.format(label), fontsize=16)
@@ -122,13 +124,23 @@ if __name__ == '__main__':
         get_clusters(model,k)
     '''
 
+    #Perform PCA
+    pca = PCA(n_components=100)
+    principalComponents = pca.fit_transform(model)
+
+    print(principalComponents)
+
+
     #Calculate the distance matrix (this is slow)
     print("Calculating distance matrix")
-    distances = distance_matrix(model,model,2)
+    distances = distance_matrix(principalComponents,principalComponents,2)
+    #distances = distance_matrix(model,model,2)
+
 
     #Find kNNs for n given points
     print("Plotting kNN")
-    plot_closest(distances,6,images,model="knn")
+    #between 5 and 7 seems to be the best so far
+    plot_closest(distances,15,images,model="knn")
 
 
 

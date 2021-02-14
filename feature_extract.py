@@ -75,8 +75,6 @@ def run_resnet(images,models):
     with h5py.File(hfile, 'w') as f:
         dset = f.create_dataset("Results", data=resnet_results)
 
-
-
 if __name__ == '__main__':
 
     #Set folder and site
