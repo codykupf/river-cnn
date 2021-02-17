@@ -14,8 +14,12 @@ def flatten(model_file,model):
 
     if model == "ResNet":
         shape = 7*7*2048
-    else:
+    elif model == "VGG":
         shape = 7*7*512
+    elif model == "VGG Fine Tune":
+        shape = 512
+    else:
+        print('Invalid model name')
 
     # Load resnet results
     with h5py.File(model_file, "r") as f:
@@ -33,7 +37,7 @@ def flatten(model_file,model):
 
     return model_data
 
-def get_clusters(model,K):
+def get_clusters(model,K,images):
 
     #Identify
     kmeans = KMeans(n_clusters=k, init='k-means++')
@@ -57,23 +61,27 @@ def plot_closest(df,K,images,n_figs=8,model="kmeans"):
 
         if model == "kmeans":
 
+            print(df[df['label']==row])
             #Get the n closest images
             subset = df[df['label']==row].head(n_figs)
 
             plot_images = subset.index.values
+            print(plot_images)
 
-        #Othrew
+        #Otherwise Knn
         else:
 
             #Pick a random row
             rand_row = np.random.randint(0,df.shape[0])
+            print("Random row is ", rand_row)
             plot_images = np.argsort(distances[:,rand_row])[:n_figs]
+            print(plot_images)
 
         #Load and plot the images
         for i in range(0, n_figs):
 
             image = mpimg.imread("{}{}.jpg".format(images,plot_images[i]))
-            #print("Loading {}{}.jpg".format(images,plot_images[i]))
+            print("Loading {}{}.jpg".format(images,plot_images[i]))
 
             ax = fig.add_subplot(8, n_figs, 1 + i + row * n_figs)
 
@@ -107,40 +115,40 @@ if __name__ == '__main__':
     # Flatten model results for clustering
     print("Flattening model results")
     vgg = flatten("{}VGG_Results.hdf5".format(models), "VGG")
+    vgg_finetune = flatten("{}VGG_FineTune4_Results.hdf5".format(models), "VGG Fine Tune")
     resnet = flatten("{}ResNet_Results.hdf5".format(models), "ResNet")
 
     i = 1
 
-    model = vgg
+    model = vgg_finetune
 
     # Drop features that are the same for all points
-    model = model[:, ~np.all(model == model[0, :], axis=0)]
-    print("Input shape is", model.shape)
+    #model = model[:, ~np.all(model == model[0, :], axis=0)]
+    #print("Input shape is", model.shape)
+
+    #Perform PCA
+    print("Performing PCA")
+    pca = PCA(n_components=100)
+    model = pca.fit_transform(model)
 
     '''
     # Perform k-means++ clustering
-    for k in [2]:
+    for k in [6]:
         print("Performing k-means clustering for VGG k={}".format(k))
-        get_clusters(model,k)
+        get_clusters(principalComponents,k,images)
     '''
-
-    #Perform PCA
-    pca = PCA(n_components=100)
-    principalComponents = pca.fit_transform(model)
-
-    print(principalComponents)
-
 
     #Calculate the distance matrix (this is slow)
     print("Calculating distance matrix")
-    distances = distance_matrix(principalComponents,principalComponents,2)
+    distances = distance_matrix(model,model,2)
     #distances = distance_matrix(model,model,2)
 
 
     #Find kNNs for n given points
     print("Plotting kNN")
     #between 5 and 7 seems to be the best so far
-    plot_closest(distances,15,images,model="knn")
+    plot_closest(distances,5,images,model="knn")
+
 
 
 

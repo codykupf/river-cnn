@@ -4,6 +4,8 @@ import h5py
 from os import path
 
 #Keras libraries
+from tensorflow.keras.models import load_model
+from tensorflow.keras.models import Model
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.vgg16 import VGG16
 from tensorflow.keras.applications.vgg16 import preprocess_input
@@ -56,6 +58,28 @@ def run_vgg(images,models):
     with h5py.File(hfile, 'w') as f:
         dset = f.create_dataset("Results", data=vgg_results)
 
+def run_vgg_finetune(images,models):
+
+    # Initialize the model using the weights for imagenet
+    vgg_model = load_model("{}VGG_FineTune/Trial4".format(models))
+
+    #Remove bottom classification layer from model
+    model = Model(vgg_model.input, vgg_model.layers[-2].output)
+
+    # Display model settings
+    #print(model.summary())
+
+
+    # Run VGG16 Model to extract features
+    results = extract(images, model)
+
+    # Export the results to an HDF5 file
+    hfile = "{}VGG_FineTune5_Results.hdf5".format(models)
+
+    with h5py.File(hfile, 'w') as f:
+        dset = f.create_dataset("Results", data=results)
+
+
 def run_resnet(images,models):
 
     print("Running ResNet")
@@ -86,6 +110,7 @@ if __name__ == '__main__':
     if path.exists("{}VGG_Results.hdf5".format(models)) is False:
         run_vgg(images,models)
     if path.exists("{}ResNet_Results.hdf5".format(models)) is False:
-        run_vgg(images,models)
-
+        run_resnet(images,models)
+    #if path.exists("{}VGG_FineTune2_Results.hdf5".format(models)) is False:
+    run_vgg_finetune(images,models)
 
