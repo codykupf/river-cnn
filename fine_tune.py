@@ -8,6 +8,7 @@ from tensorflow.keras.models import load_model
 
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.applications import VGG16
+from tensorflow.keras.applications.resnet50 import ResNet50
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.layers import Flatten
 from tensorflow.keras.layers import Dense
@@ -54,7 +55,7 @@ if __name__ == '__main__':
     images = "{}Images/".format(folder)
     models = "{}Models/".format(folder)
 
-
+    '''
     #Load model
     model = load_model("{}VGG_FineTune/Trial5".format(models))
     history_df=pd.read_csv("{}VGG_FineTune/Trial5.csv".format(models))
@@ -62,6 +63,8 @@ if __name__ == '__main__':
     plot_training(history_df,history_df.shape[0])
 
     '''
+    
+    #BUILD AN IMAGE GENERATOR FOR FINE TUNING
 
     #Get all the files
     img_files = get_files(images)
@@ -103,6 +106,10 @@ if __name__ == '__main__':
         shuffle=True,
         seed=14,
         subset='validation')
+
+    '''
+        
+    #FINE-TUNE THE VGG16 MODEL
 
     #From https://www.pyimagesearch.com/2019/06/03/fine-tuning-with-keras-and-deep-learning/
     # load the VGG16 network, ensuring the head FC layer sets are left
@@ -162,4 +169,58 @@ if __name__ == '__main__':
     
 
     '''
+
+    # FINE-TUNE THE RESNET50 MODEL
+
+    # From https://www.pyimagesearch.com/2019/06/03/fine-tuning-with-keras-and-deep-learning/
+    # load the VGG16 network, ensuring the head FC layer sets are left
+    # off
+    baseModel = ResNet50(weights='imagenet', include_top=False,
+                      input_tensor=Input(shape=(224, 224, 3)))
+
+    # construct the head of the model that will be placed on top of the
+    # the base model
+    headModel = baseModel.output
+    headModel = Flatten(name="flatten")(headModel)
+    headModel = Dense(512, activation="relu")(headModel)
+    headModel = Dropout(0.5)(headModel)
+    headModel = Dense(num_classes, activation="softmax")(headModel)
+
+    # place the head FC model on top of the base model (this will become
+    # the actual model we will train)
+    model = Model(inputs=baseModel.input, outputs=headModel)
+
+    # loop over all layers in the base model and freeze them so they will
+    # *not* be updated during the first training process
+    for layer in baseModel.layers:
+        layer.trainable = False
+
+    print(model.summary())
+
+    # compile our model (this needs to be done after our setting our
+    # layers to being non-trainable
+    print("[INFO] compiling model...")
+    opt = SGD(lr=1e-4, momentum=0.9)
+    model.compile(loss="categorical_crossentropy", optimizer=opt,
+                  metrics=["accuracy"])
+
+    # train the head of the network for a few epochs (all other layers
+    # are frozen) -- this will allow the new FC layers to start to become
+    # initialized with actual "learned" values versus pure random
+    print("[INFO] training head...")
+    BATCH_SIZE = 24
+    num_epochs = 100
+
+    history = model.fit(
+        trainGen, validation_data=valGen,
+        steps_per_epoch=trainGen.n / trainGen.batch_size,
+        validation_steps=valGen.n / valGen.batch_size,
+        epochs=num_epochs)
+
+    # Save results
+    model.save("{}ResNet_FineTune/Trial1".format(models))
+    history_df = pd.DataFrame(history.history)
+    history_df.to_csv("{}ResNet_FineTune/Trial1.csv".format(models))
+
+    plot_training(history_df, num_epochs)
 

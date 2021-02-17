@@ -58,36 +58,11 @@ def run_vgg(images,models):
     with h5py.File(hfile, 'w') as f:
         dset = f.create_dataset("Results", data=vgg_results)
 
-def run_vgg_finetune(images,models):
-
-    # Initialize the model using the weights for imagenet
-    vgg_model = load_model("{}VGG_FineTune/Trial4".format(models))
-
-    #Remove bottom classification layer from model
-    model = Model(vgg_model.input, vgg_model.layers[-2].output)
-
-    # Display model settings
-    #print(model.summary())
-
-
-    # Run VGG16 Model to extract features
-    results = extract(images, model)
-
-    # Export the results to an HDF5 file
-    hfile = "{}VGG_FineTune5_Results.hdf5".format(models)
-
-    with h5py.File(hfile, 'w') as f:
-        dset = f.create_dataset("Results", data=results)
-
-
 def run_resnet(images,models):
 
-    print("Running ResNet")
-
     # Initialize the model using the weights for imagenet
+    print("Running ResNet")
     model_resnet = ResNet50(weights='imagenet', include_top=False)
-
-    # Show model params
     # model_resnet.summary()
 
     # Run model to extract features
@@ -95,9 +70,27 @@ def run_resnet(images,models):
 
     # Export results to hdf
     hfile = "{}ResNet_Results.hdf5".format(models)
-
     with h5py.File(hfile, 'w') as f:
         dset = f.create_dataset("Results", data=resnet_results)
+
+#Run the outputs of the fine-tuned models
+def run_finetune(images,infile,outfile):
+
+    # Initialize the model using the weights for imagenet
+    in_model = load_model(infile)
+    print("Running ",infile)
+
+    #Remove bottom classification layer from model
+    model = Model(in_model.input, in_model.layers[-2].output)
+    print(model.summary())
+
+    # Extract Features
+    results = extract(images, model)
+
+    # Export the results to an HDF5 file
+    hfile = outfile
+    with h5py.File(hfile, 'w') as f:
+        dset = f.create_dataset("Results", data=results)
 
 if __name__ == '__main__':
 
@@ -111,6 +104,16 @@ if __name__ == '__main__':
         run_vgg(images,models)
     if path.exists("{}ResNet_Results.hdf5".format(models)) is False:
         run_resnet(images,models)
+
+    '''
     #if path.exists("{}VGG_FineTune2_Results.hdf5".format(models)) is False:
-    run_vgg_finetune(images,models)
+    infile = "{}VGG_FineTune/Trial4".format(models)
+    outfile = "{}VGG_FineTune5_Results.hdf5".format(models)
+    run_finetune(images,infile,outfile)
+    '''
+
+    infile = "{}ResNet_FineTune/Trial1".format(models)
+    outfile = "{}ResNet_FineTune1_Results.hdf5".format(models)
+    run_finetune(images,infile,outfile)
+
 

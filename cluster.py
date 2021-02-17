@@ -16,7 +16,7 @@ def flatten(model_file,model):
         shape = 7*7*2048
     elif model == "VGG":
         shape = 7*7*512
-    elif model == "VGG Fine Tune":
+    elif model == "Fine Tune":
         shape = 512
     else:
         print('Invalid model name')
@@ -115,12 +115,13 @@ if __name__ == '__main__':
     # Flatten model results for clustering
     print("Flattening model results")
     vgg = flatten("{}VGG_Results.hdf5".format(models), "VGG")
-    vgg_finetune = flatten("{}VGG_FineTune4_Results.hdf5".format(models), "VGG Fine Tune")
     resnet = flatten("{}ResNet_Results.hdf5".format(models), "ResNet")
+    vgg_finetune = flatten("{}VGG_FineTune4_Results.hdf5".format(models), "Fine Tune")
+    resnet_finetune = flatten("{}ResNet_FineTune1_Results.hdf5".format(models), "Fine Tune")
 
     i = 1
 
-    model = vgg_finetune
+    model = resnet_finetune
 
     # Drop features that are the same for all points
     #model = model[:, ~np.all(model == model[0, :], axis=0)]
@@ -143,11 +144,10 @@ if __name__ == '__main__':
     distances = distance_matrix(model,model,2)
     #distances = distance_matrix(model,model,2)
 
-
     #Find kNNs for n given points
     print("Plotting kNN")
     #between 5 and 7 seems to be the best so far
-    plot_closest(distances,5,images,model="knn")
+    plot_closest(distances,8,images,model="knn")
 
 
 
