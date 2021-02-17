@@ -51,9 +51,10 @@ def get_clusters(model,K,images):
     df = df.sort_values(['label', 'sq-dist'])
     plot_closest(df, k, images)
 
-def plot_closest(df,K,images,n_figs=8,model="kmeans"):
+def plot_closest(df,K,images,outfile,n_figs=8,model="kmeans"):
 
-    fig = plt.figure()
+    np.random.seed(30)
+    fig = plt.figure(figsize=(4,4), dpi=300)
     # fig.suptitle('{}'.format(label), fontsize=16)
 
     # Loop through each of the K terms and find the n closest images
@@ -74,8 +75,17 @@ def plot_closest(df,K,images,n_figs=8,model="kmeans"):
             #Pick a random row
             rand_row = np.random.randint(0,df.shape[0])
             print("Random row is ", rand_row)
-            plot_images = np.argsort(distances[:,rand_row])[:n_figs]
+            plot_images = (np.argsort(distances[:,rand_row])[:n_figs])
             print(plot_images)
+
+            #Occasionally some points are duplicate distances of zeroes
+
+            #Drop the rand_row from plot_images
+            #append rand_row to front
+            plot_images = np.delete(plot_images,np.where(plot_images==rand_row))
+            plot_images = np.insert(plot_images,0,rand_row)
+            print(plot_images)
+
 
         #Load and plot the images
         for i in range(0, n_figs):
@@ -83,12 +93,19 @@ def plot_closest(df,K,images,n_figs=8,model="kmeans"):
             image = mpimg.imread("{}{}.jpg".format(images,plot_images[i]))
             print("Loading {}{}.jpg".format(images,plot_images[i]))
 
-            ax = fig.add_subplot(8, n_figs, 1 + i + row * n_figs)
+            ax = fig.add_subplot(6, n_figs, 1 + i + row * n_figs)
 
             # Thicken the line for plotting to 2 px
             kernel = np.ones((2, 2), np.uint8)
             thickened = cv2.erode(image, kernel, iterations=1)
             ax.imshow(thickened, aspect='equal')
+
+            if i == 0:
+                title_text = 'SS{}'.format(plot_images[i])
+            else:
+                title_text = 'RR{}'.format(plot_images[i])
+
+            ax.set_title(title_text,fontsize=6,pad=-40)
 
             # ax.imshow(image, aspect='equal')
             # plt.axis('off')
@@ -99,10 +116,13 @@ def plot_closest(df,K,images,n_figs=8,model="kmeans"):
             ax.spines['right'].set_color(None)
             ax.spines['left'].set_color(None)
 
+            '''
             if i == 0:
                 ax.set_ylabel("Class {}".format(row + 1), size='large')
-
-    plt.subplots_adjust(top=1.0, wspace=0.1, hspace=0.05)
+            '''
+    plt.tight_layout()
+    plt.subplots_adjust(wspace=0.1, hspace=0.1)
+    plt.savefig(outfile)
     plt.show()
 
 if __name__ == '__main__':
@@ -111,17 +131,18 @@ if __name__ == '__main__':
     folder = "/Users/codykupf/Documents/Projects/river-cnn/"
     images = "{}Images/".format(folder)
     models = "{}Models/".format(folder)
+    figures = "{}Figures/".format(folder)
 
     # Flatten model results for clustering
     print("Flattening model results")
     vgg = flatten("{}VGG_Results.hdf5".format(models), "VGG")
     resnet = flatten("{}ResNet_Results.hdf5".format(models), "ResNet")
-    vgg_finetune = flatten("{}VGG_FineTune4_Results.hdf5".format(models), "Fine Tune")
+    vgg_finetune = flatten("{}VGG_FineTune5_Results.hdf5".format(models), "Fine Tune")
     resnet_finetune = flatten("{}ResNet_FineTune1_Results.hdf5".format(models), "Fine Tune")
 
     i = 1
 
-    model = resnet_finetune
+    model = vgg_finetune
 
     # Drop features that are the same for all points
     #model = model[:, ~np.all(model == model[0, :], axis=0)]
@@ -129,7 +150,7 @@ if __name__ == '__main__':
 
     #Perform PCA
     print("Performing PCA")
-    pca = PCA(n_components=100)
+    pca = PCA(n_components=100,svd_solver='full')
     model = pca.fit_transform(model)
 
     '''
@@ -147,7 +168,8 @@ if __name__ == '__main__':
     #Find kNNs for n given points
     print("Plotting kNN")
     #between 5 and 7 seems to be the best so far
-    plot_closest(distances,8,images,model="knn")
+    outfile = '{}VGG5.png'.format(figures)
+    plot_closest(distances,6,images,outfile,model="knn")
 
 
 
