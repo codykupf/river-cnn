@@ -226,6 +226,6 @@ if __name__ == '__main__':
     plt.show()
 
     #Normalize lines and convert to images
-    create_images(filter_file,images)
+    #create_images(filter_file,images)
 
 

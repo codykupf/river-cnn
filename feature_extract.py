@@ -99,21 +99,20 @@ if __name__ == '__main__':
     images = "{}Images/".format(folder)
     models = "{}Models/".format(folder)
 
-    #Run if files don't exist
+    #Run feature extraction for files that don't exist
     if path.exists("{}VGG_Results.hdf5".format(models)) is False:
         run_vgg(images,models)
     if path.exists("{}ResNet_Results.hdf5".format(models)) is False:
         run_resnet(images,models)
 
-    '''
-    #if path.exists("{}VGG_FineTune2_Results.hdf5".format(models)) is False:
-    infile = "{}VGG_FineTune/Trial4".format(models)
-    outfile = "{}VGG_FineTune5_Results.hdf5".format(models)
-    run_finetune(images,infile,outfile)
-    '''
+    if path.exists("{}VGG_FineTune1e-4_Results.hdf5".format(models)) is False:
+        infile = "{}VGG_FineTune/Trial1e-4".format(models)
+        outfile = "{}VGG_FineTune1e-4_Results.hdf5".format(models)
+        run_finetune(images, infile, outfile)
 
-    infile = "{}ResNet_FineTune/Trial1".format(models)
-    outfile = "{}ResNet_FineTune1_Results.hdf5".format(models)
-    run_finetune(images,infile,outfile)
+    if path.exists("{}ResNet_FineTuneA_Results.hdf5".format(models)) is False:
+        infile = "{}ResNet_FineTune/TrialA".format(models)
+        outfile = "{}ResNet_FineTuneA_Results.hdf5".format(models)
+        run_finetune(images, infile, outfile)
 
 

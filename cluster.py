@@ -53,7 +53,7 @@ def get_clusters(model,K,images):
 
 def plot_closest(df,K,images,outfile,n_figs=8,model="kmeans"):
 
-    np.random.seed(30)
+    np.random.seed(36)
     fig = plt.figure(figsize=(4,4), dpi=300)
     # fig.suptitle('{}'.format(label), fontsize=16)
 
@@ -79,13 +79,10 @@ def plot_closest(df,K,images,outfile,n_figs=8,model="kmeans"):
             print(plot_images)
 
             #Occasionally some points are duplicate distances of zeroes
-
-            #Drop the rand_row from plot_images
-            #append rand_row to front
+            #Drop the rand_row from plot_images and append rand_row to front
             plot_images = np.delete(plot_images,np.where(plot_images==rand_row))
             plot_images = np.insert(plot_images,0,rand_row)
             print(plot_images)
-
 
         #Load and plot the images
         for i in range(0, n_figs):
@@ -116,10 +113,6 @@ def plot_closest(df,K,images,outfile,n_figs=8,model="kmeans"):
             ax.spines['right'].set_color(None)
             ax.spines['left'].set_color(None)
 
-            '''
-            if i == 0:
-                ax.set_ylabel("Class {}".format(row + 1), size='large')
-            '''
     plt.tight_layout()
     plt.subplots_adjust(wspace=0.1, hspace=0.1)
     plt.savefig(outfile)
@@ -137,39 +130,35 @@ if __name__ == '__main__':
     print("Flattening model results")
     vgg = flatten("{}VGG_Results.hdf5".format(models), "VGG")
     resnet = flatten("{}ResNet_Results.hdf5".format(models), "ResNet")
-    vgg_finetune = flatten("{}VGG_FineTune5_Results.hdf5".format(models), "Fine Tune")
-    resnet_finetune = flatten("{}ResNet_FineTune1_Results.hdf5".format(models), "Fine Tune")
+    vgg_finetune = flatten("{}VGG_FineTune1e-4_Results.hdf5".format(models), "Fine Tune")
+    resnet_finetune = flatten("{}ResNet_FineTuneA_Results.hdf5".format(models), "Fine Tune")
 
-    i = 1
+    all_models= [vgg, resnet, vgg_finetune, resnet_finetune]
+    labels = ["VGG16", "ResNet50","VGG16-FineTune","ResNet50-FineTune"]
 
-    model = vgg_finetune
+    for i in range(0,len(all_models)):
 
-    # Drop features that are the same for all points
-    #model = model[:, ~np.all(model == model[0, :], axis=0)]
-    #print("Input shape is", model.shape)
+        print("Processing {}".format(labels[i]))
 
-    #Perform PCA
-    print("Performing PCA")
-    pca = PCA(n_components=100,svd_solver='full')
-    model = pca.fit_transform(model)
+        model = all_models[i]
 
-    '''
-    # Perform k-means++ clustering
-    for k in [6]:
-        print("Performing k-means clustering for VGG k={}".format(k))
-        get_clusters(principalComponents,k,images)
-    '''
+        #Perform PCA
+        print("Performing PCA")
+        pca = PCA(n_components=100,svd_solver='full')
+        model = pca.fit_transform(model)
 
-    #Calculate the distance matrix (this is slow)
-    print("Calculating distance matrix")
-    distances = distance_matrix(model,model,2)
-    #distances = distance_matrix(model,model,2)
+        #Drop rows not within distance d
 
-    #Find kNNs for n given points
-    print("Plotting kNN")
-    #between 5 and 7 seems to be the best so far
-    outfile = '{}VGG5.png'.format(figures)
-    plot_closest(distances,6,images,outfile,model="knn")
+        #Calculate the distance matrix (this is slow)
+        print("Calculating distance matrix")
+        distances = distance_matrix(model,model,2)
+        #distances = distance_matrix(model,model,2)
+
+        #Find kNNs for n given points
+        print("Plotting kNN")
+        #between 5 and 7 seems to be the best so far
+        outfile = '{}{}.png'.format(figures,labels[i])
+        plot_closest(distances,6,images,outfile,model="knn")
 
 
 
