@@ -10,6 +10,8 @@ This code is designed to be used as a tool for identifying *n* reference reaches
 3. Extract features from each of the stream segment images using feature_extract.py
 4. Use cluster.py to identify nearest neighbours for stream segments.
 
+More details on typical use can be found in the example.py script.
+
 ## Reference
 Kupferschmidt, C., Binns, A. (May 2021). Development of an AI Tool to Identify Reference Reaches for Natural Channel Design. Proceedings of the CSCE Anual Conference, Virtual.
 
