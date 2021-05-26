@@ -1,7 +1,7 @@
 # river-cnn
 
 ## Introduction
-This repository contains code for the latest development version of the AI Tool that will be presented at the 2021 Canadian Society for Civil Engineering Hydrotechnical Conference in the paper **Development of an AI Tool to Identify Reference Reaches for Natural Channel Design** by Cody Kupferschmidt and Andrew Binns.
+This repository contains code for the latest development version of the AI Tool that was presented at the 2021 Canadian Society for Civil Engineering Hydrotechnical Conference in the paper **Development of an AI Tool to Identify Reference Reaches for Natural Channel Design** by Cody Kupferschmidt and Andrew Binns.
 
 ## Instructions for Use
 This code is designed to be used as a tool for identifying *n* reference reaches within a distance *d* of a given site.
@@ -10,5 +10,7 @@ This code is designed to be used as a tool for identifying *n* reference reaches
 3. Extract features from each of the stream segment images using feature_extract.py
 4. Use cluster.py to identify nearest neighbours for stream segments.
 
+## Reference
+Kupferschmidt, C., Binns, A. (May 2021). Development of an AI Tool to Identify Reference Reaches for Natural Channel Design. Proceedings of the CSCE Anual Conference, Virtual.
 
    
