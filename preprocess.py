@@ -75,16 +75,11 @@ def filter_segments(clip_file,filter_file,epsg,min_length=500,min_vertices=100, 
             drop_rows.append(i)
 
     print("Dropping {} rows".format(len(drop_rows)))
-    s_clipped = s_clipped.drop(drop_rows)
+    s_clipped.drop(drop_rows)
 
     print("Adding {} new rows".format(new_rows.shape[0]))
-    s_clipped = s_clipped.append(new_rows,ignore_index=True).reset_index()
+    s_clipped.append(new_rows,ignore_index=True).reset_index()
 
-    '''
-    for i in range(0, s_clipped.shape[0]):
-        vertices.append(len(s_clipped.loc[[i],'geometry'].values[0].xy[0]))
-    s_clipped = s_clipped.assign(n_vertices=vertices)
-    '''
     # Calculate the length of each line
     s_clipped['length'] = s_clipped['geometry'].length
 
@@ -186,7 +181,7 @@ def create_images(filter_file,images):
 if __name__ == '__main__':
 
     #Set folder and site
-    folder = "/Users/codykupf/Documents/Projects/river-cnn/"
+    folder = "" #local directory
     inputs = "{}Inputs/".format(folder)
     results = "{}Results/".format(folder)
     images = "{}Images/".format(folder)
@@ -226,6 +221,6 @@ if __name__ == '__main__':
     plt.show()
 
     #Normalize lines and convert to images
-    #create_images(filter_file,images)
+    create_images(filter_file,images)
 
 

@@ -55,10 +55,11 @@ def plot_training(history,N):
 if __name__ == '__main__':
 
     #Set folder and site
-    folder = "/Users/codykupf/Documents/Projects/river-cnn/"
+    folder = "" #local directory
     images = "{}Images/".format(folder)
     models = "{}Models/".format(folder)
 
+    '''
     #Load model
     model = load_model("{}ResNet_FineTune/TrialA".format(models))
     history_df=pd.read_csv("{}ResNet_FineTune/TrialA.csv".format(models))
@@ -66,7 +67,6 @@ if __name__ == '__main__':
     plot_training(history_df,history_df.shape[0])
     '''
 
-    
     #BUILD AN IMAGE GENERATOR FOR FINE TUNING
 
     #Get all the files
@@ -96,8 +96,6 @@ if __name__ == '__main__':
         batch_size=64,
         shuffle=True,
         seed=14)
-    #subset='training')
-    #save_to_dir="/Users/codykupf/Documents/Projects/river-cnn/Generator/Train/")
 
     #Create a generator for validation (no augmentation)
     valGenerator = ImageDataGenerator()
@@ -110,8 +108,9 @@ if __name__ == '__main__':
         class_mode="categorical",
         target_size=(224,224),
         batch_size=64)
-        #save_to_dir="/Users/codykupf/Documents/Projects/river-cnn/Generator/Val/")
-        #subset='validation')
+
+
+    '''
 
     #FINE-TUNE THE MODELS
 
@@ -121,11 +120,6 @@ if __name__ == '__main__':
     # off
     baseModel = VGG16(weights="imagenet", include_top=False,
                       input_tensor=Input(shape=(224, 224, 3)))
-
-    '''
-    baseModel = ResNet50(weights='imagenet', include_top=False,
-                      input_tensor=Input(shape=(224, 224, 3)))
-    '''
 
     # construct the head of the model that will be placed on top of the
     # the base model
@@ -168,17 +162,9 @@ if __name__ == '__main__':
 
 
     #Save results
-    model.save("{}VGG_FineTune/Trial1e-4".format(models))
+    model.save("{}VGG_FineTune/May_2021_1e-4".format(models))
     history_df = pd.DataFrame(history.history)
-    history_df.to_csv("{}VGG_FineTune/Trial1e-4.csv".format(models))
-    '''
-
-    # Save results
-    model.save("{}ResNet_FineTune/Check_1e-3".format(models))
-    history_df = pd.DataFrame(history.history)
-    history_df.to_csv("{}ResNet_FineTune/Check_1e-3.csv".format(models))
-
-
+    history_df.to_csv("{}VGG_FineTune/May_2021_1e-4.csv".format(models))
     plot_training(history_df,num_epochs)
 
     '''
@@ -230,8 +216,15 @@ if __name__ == '__main__':
         trainGen, validation_data=valGen,
         steps_per_epoch = trainGen.n / trainGen.batch_size,
         validation_steps=valGen.n / valGen.batch_size,
-        epochs=num_epochs)    
-    '''
+        epochs=num_epochs)
+
+
+    #Save results
+    model.save("{}ResNet_FineTune/May_2021_1e-3".format(models))
+    history_df = pd.DataFrame(history.history)
+    history_df.to_csv("{}ResNet_FineTune/May_2021_1e-3.csv".format(models))
+    plot_training(history_df,num_epochs)
+
 
 
 

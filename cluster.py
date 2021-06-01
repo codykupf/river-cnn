@@ -8,8 +8,6 @@ import cv2
 from scipy.spatial import distance_matrix
 from sklearn.decomposition import PCA
 
-
-
 def flatten(model_file,model):
 
     if model == "ResNet":
@@ -19,7 +17,7 @@ def flatten(model_file,model):
     elif model == "Fine Tune":
         shape = 512
     else:
-        print('Invalid model name')
+        print('Invalid model name. Possible names are: ResNet, VGG, or Fine Tune')
 
     # Load resnet results
     with h5py.File(model_file, "r") as f:
@@ -75,7 +73,7 @@ def plot_closest(df,K,images,outfile,n_figs=8,model="kmeans"):
             #Pick a random row
             rand_row = np.random.randint(0,df.shape[0])
             print("Random row is ", rand_row)
-            plot_images = (np.argsort(distances[:,rand_row])[:n_figs])
+            plot_images = (np.argsort(df[:,rand_row])[:n_figs])
             print(plot_images)
 
             #Occasionally some points are duplicate distances of zeroes
@@ -118,51 +116,68 @@ def plot_closest(df,K,images,outfile,n_figs=8,model="kmeans"):
     plt.savefig(outfile)
     plt.show()
 
+def solve_distance(model):
+
+    # Perform PCA
+    print("Performing PCA")
+    pca = PCA(n_components=100, svd_solver='full')
+    model = pca.fit_transform(model)
+
+    # Drop rows not within distance d
+
+    # Calculate the distance matrix (this is slow)
+    print("Calculating distance matrix")
+    distances = distance_matrix(model, model, 2)
+    # distances = distance_matrix(model,model,2)
+
+    return distances
+
+    '''
+
+    # Find kNNs for n given points
+    print("Plotting kNN")
+    # between 5 and 7 seems to be the best so far
+    outfile = '{}{}.png'.format(figures, labels[i])
+    plot_closest(distances, 6, images, outfile, model="knn")
+    '''
+
+
 if __name__ == '__main__':
 
     #Set folder and site
-    folder = "/Users/codykupf/Documents/Projects/river-cnn/"
+    folder = ""
     images = "{}Images/".format(folder)
     models = "{}Models/".format(folder)
     figures = "{}Figures/".format(folder)
 
     # Flatten model results for clustering
     print("Flattening model results")
+
+
+    # Flatten each of the models
     vgg = flatten("{}VGG_Results.hdf5".format(models), "VGG")
     resnet = flatten("{}ResNet_Results.hdf5".format(models), "ResNet")
-    vgg_finetune = flatten("{}VGG_FineTune1e-4_Results.hdf5".format(models), "Fine Tune")
-    resnet_finetune = flatten("{}ResNet_FineTuneA_Results.hdf5".format(models), "Fine Tune")
+    vgg_finetune = flatten("{}VGG_FineTune_Results.hdf5".format(models), "Fine Tune")
+    resnet_finetune = flatten("{}ResNet_FineTune_Results.hdf5".format(models), "Fine Tune")
 
-    all_models= [vgg, resnet, vgg_finetune, resnet_finetune]
-    labels = ["VGG16", "ResNet50","VGG16-FineTune","ResNet50-FineTune"]
+    # Calculate the distance matrices
+    distance_vgg = solve_distance(vgg)
+    distance_resnet = solve_distance(resnet)
+    distance_vgg_finetune = solve_distance(vgg_finetune)
+    distance_resnet_finetune = solve_distance(resnet_finetune)
 
-    for i in range(0,len(all_models)):
+    # Find the closest
+    outfile_vgg = '{}{}.png'.format(figures,"VGG_Closest")
+    plot_closest(distance_vgg, 6, images, outfile_vgg, model="knn")
 
-        print("Processing {}".format(labels[i]))
+    outfile_resnet = '{}{}.png'.format(figures,"ResNet_Closest")
+    plot_closest(distance_resnet, 6, images, outfile_resnet, model="knn")
 
-        model = all_models[i]
+    outfile_vgg_finetune = '{}{}.png'.format(figures,"VGG_Finetune_Closest")
+    plot_closest(distance_vgg_finetune, 6, images, outfile_vgg_finetune, model="knn")
 
-        #Perform PCA
-        print("Performing PCA")
-        pca = PCA(n_components=100,svd_solver='full')
-        model = pca.fit_transform(model)
-
-        #Drop rows not within distance d
-
-        #Calculate the distance matrix (this is slow)
-        print("Calculating distance matrix")
-        distances = distance_matrix(model,model,2)
-        #distances = distance_matrix(model,model,2)
-
-        #Find kNNs for n given points
-        print("Plotting kNN")
-        #between 5 and 7 seems to be the best so far
-        outfile = '{}{}.png'.format(figures,labels[i])
-        plot_closest(distances,6,images,outfile,model="knn")
-
-
-
-
+    outfile_resnet_finetune = '{}{}.png'.format(figures,"ResNet_Finetune_Closest")
+    plot_closest(distance_resnet_finetune, 6, images, outfile_resnet_finetune, model="knn")
 
 
 
