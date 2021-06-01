@@ -10,7 +10,7 @@ from os import path
 # This step will process an input shapefile and generate images
 
 #Set working directory. It should contain five subfolders: Inputs, Results, Images, Models, Figures
-folder = "/Users/codykupf/Documents/Projects/river-cnn/"
+folder = "" #local directory
 inputs = "{}Inputs/".format(folder)
 results = "{}Results/".format(folder)
 images = "{}Images/".format(folder)
